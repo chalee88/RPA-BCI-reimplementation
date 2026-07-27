@@ -1,0 +1,1 @@
+from .spd_matrices import matrix_power

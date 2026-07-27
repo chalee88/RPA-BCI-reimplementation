@@ -44,3 +44,33 @@ def matrix_exp(A):
     """
     return expm(A)
 
+def matrix_power(A, power):
+    """
+    Compute A^power for an SPD matrix.
+
+    For SPD matrices:
+        A^p = exp(p log(A))
+
+    Parameters
+    ----------
+    A : ndarray
+        SPD matrix.
+
+    power : float
+        Exponent.
+
+    Returns
+    -------
+    ndarray
+        Matrix power A^power.
+    """
+
+    if not is_spd(A):
+        raise ValueError("A is not SPD.")
+
+    result = matrix_exp(power * matrix_log(A))
+
+    # Remove tiny numerical asymmetry.
+    result = 0.5 * (result + result.T)
+
+    return result

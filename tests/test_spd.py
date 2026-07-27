@@ -1,6 +1,7 @@
 import numpy as np 
 
 from rpa.core.spd_matrices import is_spd, matrix_log, matrix_exp, matrix_sqrt, matrix_inv_sqrt
+from rpa.core.spd_matrices import matrix_power
 
 def test_spd():
 
@@ -55,3 +56,43 @@ def test_inverse_sqrt():
     identity = S @ A @ S
 
     assert np.allclose(identity, np.eye(2))
+
+def test_matrix_power_half():
+
+    A = np.array([
+        [4.0, 0.0],
+        [0.0, 9.0],
+    ])
+
+    A_half = matrix_power(A, 0.5)
+
+    expected = np.array([
+        [2.0, 0.0],
+        [0.0, 3.0],
+    ])
+
+    assert np.allclose(A_half, expected, atol=1e-8)
+
+
+def test_matrix_power_zero():
+
+    A = np.array([
+        [4.0, 0.0],
+        [0.0, 9.0],
+    ])
+
+    result = matrix_power(A, 0.0)
+
+    assert np.allclose(result, np.eye(2), atol=1e-8)
+
+
+def test_matrix_power_one():
+
+    A = np.array([
+        [4.0, 0.0],
+        [0.0, 9.0],
+    ])
+
+    result = matrix_power(A, 1.0)
+
+    assert np.allclose(result, A, atol=1e-8)
