@@ -1,4 +1,3 @@
-````markdown
 # Riemannian Procrustes Analysis for EEG Transfer Learning
 
 This repository is an in-progress Python implementation of **Riemannian Procrustes Analysis (RPA)** for transfer learning with EEG covariance matrices.
@@ -76,7 +75,7 @@ The following components are still in progress:
 
 - MDM classifier
 - RPA class following the full paper algorithm
-- Estimation of the orthogonal rotation matrix \(U\)
+- Estimation of the orthogonal rotation matrix $U$
 - Integration with real EEG datasets
 - Benchmarking against baseline methods
 - Example notebooks and visualizations
@@ -113,7 +112,7 @@ rpa-project/
 │
 ├── requirements.txt
 └── README.md
-````
+```
 
 ---
 
@@ -193,64 +192,115 @@ rotate_covariances()
 
 ### SPD Matrices
 
-Covariance matrices are usually **symmetric positive definite**.
+Covariance matrices are usually **symmetric positive definite**, or SPD.
 
-A matrix (C) is SPD if:
+A matrix $C$ is symmetric if:
 
 $$
 C = C^T
 $$
 
-and:
+It is positive definite if:
 
 $$
 x^T C x > 0
 $$
 
-for every non-zero vector (x).
+for every non-zero vector $x$.
 
-SPD matrices do not form an ordinary Euclidean vector space. They lie on a curved space called the **SPD manifold**. Because of this, operations such as distance, averaging, and interpolation should respect the manifold geometry.
+SPD matrices do not form an ordinary Euclidean vector space. They lie on a curved space called the **SPD manifold**. Because of this, operations such as distance, averaging, and interpolation should respect the geometry of the manifold.
+
+Implemented in:
+
+```text
+rpa/core/spd_matrices.py
+```
 
 ---
 
 ### Affine-Invariant Riemannian Distance
 
-The distance between two SPD matrices (A) and (B) is computed as:
+The distance between two SPD matrices $A$ and $B$ is computed as:
 
 $$
-d(A,B)
-======
-
-\left|
-\log
-\left(
-A^{-1/2} B A^{-1/2}
-\right)
-\right|_F
+d(A,B) = \left\| \log\left(A^{-1/2} B A^{-1/2}\right) \right\|_F
 $$
 
 This is used to measure distances between covariance matrices on the SPD manifold.
+
+Implemented as:
+
+```python
+riemannian_distance()
+```
+
+in:
+
+```text
+rpa/core/riemann_base.py
+```
+
+---
+
+### Logarithmic and Exponential Maps
+
+The logarithmic map projects an SPD matrix from the curved manifold to a tangent space:
+
+$$
+\mathrm{Log}_P(X) = P^{1/2} \log\left(P^{-1/2} X P^{-1/2}\right) P^{1/2}
+$$
+
+The exponential map performs the inverse operation:
+
+$$
+\mathrm{Exp}_P(V) = P^{1/2} \exp\left(P^{-1/2} V P^{-1/2}\right) P^{1/2}
+$$
+
+These maps allow us to move between the SPD manifold and a flat tangent space.
+
+Implemented as:
+
+```python
+log_map()
+exp_map()
+```
+
+in:
+
+```text
+rpa/core/riemann_base.py
+```
 
 ---
 
 ### Riemannian Mean
 
-The Riemannian mean of covariance matrices (C_1, C_2, \dots, C_N) is the matrix (G) that minimizes:
+The Riemannian mean of covariance matrices $C_1, C_2, \dots, C_N$ is the matrix $G$ that minimizes:
 
 $$
-G =
-\arg\min_{P \succ 0}
-\sum_{i=1}^{N}
-d^2(P, C_i)
+G = \arg\min_{P \succ 0} \sum_{i=1}^{N} d^2(P, C_i)
 $$
 
 This is the geometric center of a set of SPD matrices.
+
+Implemented as:
+
+```python
+riemannian_mean()
+```
+
+The Riemannian mean is used for:
+
+- centering covariance distributions
+- computing class-wise landmarks
+- estimating dispersion
+- MDM classification
 
 ---
 
 ## Paper-Faithful RPA Pipeline
 
-The RPA paper does not simply transform the source data into the target mean space.
+The RPA paper does **not** simply transform the source data into the target mean space.
 
 Instead, the method follows this sequence:
 
@@ -280,6 +330,33 @@ Training data:
 
 Testing data:
     rotated unlabeled target data
+```
+
+---
+
+## Difference Between Mean Alignment and RPA
+
+This repository includes a helper function:
+
+```python
+align_mean_to_reference()
+```
+
+This function aligns the Riemannian mean of one covariance distribution to another reference distribution.
+
+However, this is **not full RPA**.
+
+Full RPA includes:
+
+1. recentering
+2. stretching
+3. rotation
+4. MDM classification
+
+So `align_mean_to_reference()` is kept as a useful helper, but the main RPA implementation will be built separately in:
+
+```text
+rpa/transfer_learning/rpa.py
 ```
 
 ---
@@ -388,6 +465,31 @@ print(mean)
 
 ---
 
+### Compute Dispersion
+
+```python
+import numpy as np
+
+from rpa.transfer_learning.alignment import dispersion
+
+covariances = np.array([
+    [
+        [2.0, 0.2],
+        [0.2, 3.0],
+    ],
+    [
+        [4.0, 0.5],
+        [0.5, 5.0],
+    ],
+])
+
+d = dispersion(covariances)
+
+print(d)
+```
+
+---
+
 ### Stretch Covariance Matrices
 
 ```python
@@ -413,56 +515,97 @@ print(stretched)
 
 ---
 
+### Compute Class-Wise Means
+
+```python
+import numpy as np
+
+from rpa.transfer_learning.alignment import class_means
+
+covariances = np.array([
+    [
+        [2.0, 0.2],
+        [0.2, 3.0],
+    ],
+    [
+        [3.0, 0.1],
+        [0.1, 4.0],
+    ],
+    [
+        [6.0, 0.3],
+        [0.3, 7.0],
+    ],
+    [
+        [7.0, 0.2],
+        [0.2, 8.0],
+    ],
+])
+
+labels = np.array([0, 0, 1, 1])
+
+means = class_means(covariances, labels)
+
+print(means.keys())
+```
+
+---
+
 ## Development Roadmap
 
 ### Phase 1 — Mathematical Foundation
 
-* [x] SPD validation
-* [x] Matrix square root
-* [x] Matrix inverse square root
-* [x] Matrix logarithm
-* [x] Matrix exponential
-* [x] Matrix power
-* [x] Riemannian distance
-* [x] Log map
-* [x] Exp map
-* [x] Riemannian mean
+- [x] SPD validation
+- [x] Matrix square root
+- [x] Matrix inverse square root
+- [x] Matrix logarithm
+- [x] Matrix exponential
+- [x] Matrix power
+- [x] Riemannian distance
+- [x] Log map
+- [x] Exp map
+- [x] Riemannian mean
 
 ### Phase 2 — RPA Transformation Helpers
 
-* [x] Centering
-* [x] Recoloring
-* [x] Mean alignment helper
-* [x] Dispersion
-* [x] Stretching
-* [x] Class-wise means
-* [x] Rotation helper
+- [x] Centering
+- [x] Recoloring
+- [x] Mean alignment helper
+- [x] Dispersion
+- [x] Stretching
+- [x] Class-wise means
+- [x] Rotation helper
 
 ### Phase 3 — Classification
 
-* [ ] MDM classifier
-* [ ] MDM tests
+- [ ] MDM classifier
+- [ ] MDM tests
 
 ### Phase 4 — Full RPA Pipeline
 
-* [ ] RPA class
-* [ ] Target labeled/unlabeled split handling
-* [ ] Paper-style training and prediction pipeline
-* [ ] Rotation matrix (U) estimation
+- [ ] RPA class
+- [ ] Target labeled/unlabeled split handling
+- [ ] Paper-style training and prediction pipeline
+- [ ] Rotation matrix $U$ estimation
 
 ### Phase 5 — Experiments
 
-* [ ] Synthetic SPD dataset
-* [ ] EEG covariance extraction
-* [ ] MOABB dataset support
-* [ ] Accuracy benchmarking
-* [ ] Visualization of recentering, stretching, and rotation
+- [ ] Synthetic SPD dataset
+- [ ] EEG covariance extraction
+- [ ] MOABB dataset support
+- [ ] Accuracy benchmarking
+- [ ] Visualization of recentering, stretching, and rotation
 
 ---
 
-## Reference Implementation
+## Reference
 
-The official author repository for the RPA paper is available here:
+### Paper
+
+Pedro L. C. Rodrigues, Christian Jutten, and Marco Congedo,  
+**"Riemannian Procrustes Analysis: Transfer Learning for Brain-Computer Interfaces"**,  
+IEEE Transactions on Biomedical Engineering, 2018.
+
+### Official Author Repository
 
 ```text
 https://github.com/plcrodrigues/RPA
@@ -474,9 +617,8 @@ This repository is used as a conceptual reference while this project aims to bui
 
 ## Disclaimer
 
-This project is currently a learning-focused and research-oriented reimplementation. It is not yet a complete reproduction of the paper results.
+This project is currently a learning-focused and research-oriented reimplementation.
+
+It is not yet a complete reproduction of the paper results.
 
 The current implementation provides the mathematical and geometric foundation for RPA, but the full algorithm and experimental benchmarks are still under development.
-
-```
-```
