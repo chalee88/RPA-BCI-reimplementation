@@ -197,15 +197,15 @@ Covariance matrices are usually **symmetric positive definite**.
 
 A matrix (C) is SPD if:
 
-[
+$$
 C = C^T
-]
+$$
 
 and:
 
-[
+$$
 x^T C x > 0
-]
+$$
 
 for every non-zero vector (x).
 
@@ -217,7 +217,7 @@ SPD matrices do not form an ordinary Euclidean vector space. They lie on a curve
 
 The distance between two SPD matrices (A) and (B) is computed as:
 
-[
+$$
 d(A,B)
 ======
 
@@ -227,7 +227,7 @@ d(A,B)
 A^{-1/2} B A^{-1/2}
 \right)
 \right|_F
-]
+$$
 
 This is used to measure distances between covariance matrices on the SPD manifold.
 
@@ -237,12 +237,12 @@ This is used to measure distances between covariance matrices on the SPD manifol
 
 The Riemannian mean of covariance matrices (C_1, C_2, \dots, C_N) is the matrix (G) that minimizes:
 
-[
+$$
 G =
 \arg\min_{P \succ 0}
 \sum_{i=1}^{N}
 d^2(P, C_i)
-]
+$$
 
 This is the geometric center of a set of SPD matrices.
 
