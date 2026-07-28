@@ -8,7 +8,7 @@ from rpa.core.spd_matrices import (
     matrix_sqrt
 )
 
-def  riemann_distance(A, B):
+def  riemannian_distance(A, B):
     """
     Affine-Invariant Riemannian Distance (AIRM)
     """

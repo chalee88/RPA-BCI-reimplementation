@@ -1,6 +1,6 @@
 import numpy as np
 from rpa.core.riemann_base import (
-    riemann_distance,
+    riemannian_distance,
     log_map,
     exp_map, 
     riemannian_mean,
@@ -13,7 +13,7 @@ def test_distance_zero():
         [0.5, 3.0]
     ])
 
-    d = riemann_distance(A, A)
+    d = riemannian_distance(A, A)
 
     assert np.isclose(d, 0.0)
 
@@ -29,8 +29,8 @@ def test_distance_symmetric():
         [2, 4],
     ], dtype=float)
 
-    d1 = riemann_distance(A, B)
-    d2 = riemann_distance(B, A)
+    d1 = riemannian_distance(A, B)
+    d2 = riemannian_distance(B, A)
 
     assert np.allclose(d1, d2)
 
@@ -42,7 +42,7 @@ def test_distance_positive():
         [0, 2]
     ])
 
-    d = riemann_distance(A, B)
+    d = riemannian_distance(A, B)
 
     assert d >= 0
 
