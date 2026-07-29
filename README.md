@@ -65,6 +65,10 @@ This repository is currently under active development.
 - Unit tests for Riemannian geometry functions
 - Unit tests for transfer-learning alignment helpers
 
+#### Classification
+
+- Minimum Distance to Mean classifier
+
 ---
 
 ## Not Yet Implemented
@@ -73,7 +77,6 @@ The full RPA pipeline is not complete yet.
 
 The following components are still in progress:
 
-- MDM classifier
 - RPA class following the full paper algorithm
 - Estimation of the orthogonal rotation matrix $U$
 - Integration with real EEG datasets
@@ -89,6 +92,9 @@ rpa-project/
 │
 ├── rpa/
 │   ├── __init__.py
+│   ├── classification/
+│   │   ├── __init__.py
+│   │   └── mdm.py
 │   │
 │   ├── core/
 │   │   ├── __init__.py
@@ -577,8 +583,8 @@ print(means.keys())
 
 ### Phase 3 — Classification
 
-- [ ] MDM classifier
-- [ ] MDM tests
+- [x] MDM classifier
+- [x] MDM tests
 
 ### Phase 4 — Full RPA Pipeline
 
