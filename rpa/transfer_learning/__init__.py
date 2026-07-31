@@ -8,6 +8,12 @@ from .alignment import (
     rotate_covariances,
 )
 
+from .procrustes import (
+    estimate_rotation,
+    estimate_rotation_from_class_means,
+    rotation_objective_value,
+)
+
 from .rpa import RPA
 
 __all__ = [
@@ -18,5 +24,8 @@ __all__ = [
     "stretch_covariances",
     "class_means",
     "rotate_covariances",
+    "estimate_rotation",
+    "estimate_rotation_from_class_means",
+    "rotation_objection_value",
     "RPA",
 ]

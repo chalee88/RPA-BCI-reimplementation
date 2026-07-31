@@ -589,9 +589,9 @@ print(means.keys())
 
 ### Phase 4 — Full RPA Pipeline
 
-- [ ] RPA class
-- [ ] Target labeled/unlabeled split handling
-- [ ] Paper-style training and prediction pipeline
+- [x] RPA class
+- [x] Target labeled/unlabeled split handling
+- [x] Paper-style training and prediction pipeline
 - [ ] Rotation matrix $U$ estimation
 
 ### Phase 5 — Experiments

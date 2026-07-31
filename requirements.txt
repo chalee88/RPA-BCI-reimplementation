@@ -4,3 +4,5 @@ matplotlib
 scikit-learn
 pytest
 pyriemann
+pymanopt
+autograd

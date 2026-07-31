@@ -9,6 +9,8 @@ from rpa.transfer_learning.alignment import (
     rotate_covariances,
 )
 
+from rpa.transfer_learning.procrustes import estimate_rotation
+
 
 class RPA:
     """
@@ -121,12 +123,12 @@ class RPA:
         )
 
         # Step 6: estimate rotation matrix U.
-        #
-        # For now, use identity rotation.
-        # Later, this will become:
-        #
-        # self.U_ = estimate_rotation(...)
-        self.U_ = np.eye(n_channels)
+        self.U_ = estimate_rotation(
+            source_centered,
+            source_labels,
+            target_labeled_stretched,
+            target_labeled_labels,
+        )
 
         # Step 7: rotate labeled target data.
         target_labeled_rotated = rotate_covariances(
