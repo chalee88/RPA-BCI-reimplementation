@@ -592,15 +592,18 @@ print(means.keys())
 - [x] RPA class
 - [x] Target labeled/unlabeled split handling
 - [x] Paper-style training and prediction pipeline
-- [ ] Rotation matrix $U$ estimation
+- [x] Rotation matrix $U$ estimation
 
 ### Phase 5 — Experiments
 
-- [ ] Synthetic SPD dataset
+- [x] Synthetic SPD dataset
+- [x] Synthetic accuracy benchmarking
+- [x] Multi-difficulty synthetic benchmark
+- [ ] Channel-scaling synthetic benchmark
+- [ ] Visualization of recentering, stretching, and rotation
 - [ ] EEG covariance extraction
 - [ ] MOABB dataset support
-- [ ] Accuracy benchmarking
-- [ ] Visualization of recentering, stretching, and rotation
+- [ ] Real EEG benchmarking
 
 ---
 

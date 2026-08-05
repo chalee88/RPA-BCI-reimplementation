@@ -10,6 +10,7 @@ from rpa.core.spd_matrices import (
     matrix_sqrt,
     matrix_inv_sqrt,
     matrix_power,
+    nearest_spd,
 )
 
 
@@ -156,14 +157,9 @@ def recolor_covariances(centered_covariances, target_mean):
     target_sqrt = matrix_sqrt(target_mean)
 
     recolored_covariances = np.array([
-        target_sqrt @ covariance @ target_sqrt
+        nearest_spd(target_sqrt @ covariance @ target_sqrt)
         for covariance in centered_covariances
     ])
-
-    recolored_covariances = 0.5 * (
-        recolored_covariances
-        + np.transpose(recolored_covariances, axes=(0, 2, 1))
-    )
 
     return recolored_covariances
 
@@ -393,12 +389,8 @@ def rotate_covariances(covariances, U):
         raise ValueError("U must be orthogonal.")
 
     rotated = np.array([
-        U.T @ covariance @ U
+        nearest_spd(U.T @ covariance @ U)
         for covariance in covariances
     ])
-
-    rotated = 0.5 * (
-        rotated + np.transpose(rotated, axes=(0, 2, 1))
-    )
-
+    
     return rotated

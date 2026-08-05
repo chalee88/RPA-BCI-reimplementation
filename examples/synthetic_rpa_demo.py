@@ -105,12 +105,12 @@ def main():
     # orientation information. That makes rotation meaningful.
     source_class_means = {
         0: np.array([
-            [2.0, 0.4],
-            [0.4, 1.0],
+            [2.0, 0.35],
+            [0.35, 1.3],
         ]),
         1: np.array([
-            [1.0, -0.3],
-            [-0.3, 2.5],
+            [1.6, -0.25],
+            [-0.25, 1.9],
         ]),
     }
 
@@ -120,9 +120,9 @@ def main():
     source_covariances, source_labels = generate_domain(
         class_means=source_class_means,
         samples_per_class=50,
-        noise_level=0.08,
+        noise_level=0.18,
         random_state=random_state,
-    )
+    ) 
 
     # ------------------------------------------------------------
     # 3. Generate target data by rotating and scaling source-like data.
@@ -130,11 +130,11 @@ def main():
     target_covariances, target_labels = generate_domain(
         class_means=source_class_means,
         samples_per_class=50,
-        noise_level=0.08,
+        noise_level=0.18,
         random_state=random_state + 1,
     )
 
-    angle = np.pi / 5.0
+    angle = np.pi / 3.0
 
     rotation_matrix = np.array([
         [np.cos(angle), -np.sin(angle)],
@@ -148,7 +148,7 @@ def main():
 
     target_covariances = scale_domain(
         target_covariances,
-        scale=1.4,
+        scale=1.8,
     )
 
     # ------------------------------------------------------------
@@ -157,7 +157,7 @@ def main():
     target_labeled_covariances, target_test_covariances, target_labeled_labels, target_test_labels = train_test_split(
         target_covariances,
         target_labels,
-        test_size=0.8,
+        test_size=0.9,
         stratify=target_labels,
         random_state=random_state,
     )

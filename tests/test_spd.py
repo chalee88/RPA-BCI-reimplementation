@@ -2,6 +2,7 @@ import numpy as np
 
 from rpa.core.spd_matrices import is_spd, matrix_log, matrix_exp, matrix_sqrt, matrix_inv_sqrt
 from rpa.core.spd_matrices import matrix_power
+from rpa.core.spd_matrices import nearest_spd
 
 def test_spd():
 
@@ -25,13 +26,13 @@ def test_log_exp_inverse():
 
     A = np.array([
         [2.0, 0.1],
-        [0.0, 5.0]
+        [0.1, 5.0],
     ])
 
     L = matrix_log(A)
     A2 = matrix_exp(L)
 
-    assert np.allclose(A, A2)
+    assert np.allclose(A, A2, atol=1e-8)
 
 def test_matrix_sqrt():
 
@@ -96,3 +97,15 @@ def test_matrix_power_one():
     result = matrix_power(A, 1.0)
 
     assert np.allclose(result, A, atol=1e-8)
+
+
+def test_nearest_spd_repairs_tiny_negative_eigenvalue():
+
+    A = np.array([
+        [1.0, 0.0],
+        [0.0, -1e-12],
+    ])
+
+    repaired = nearest_spd(A)
+
+    assert is_spd(repaired)

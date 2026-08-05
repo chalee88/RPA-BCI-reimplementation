@@ -76,7 +76,7 @@ def exp_map(P, V):
 
     
 
-def riemannian_mean(matrices, tol=1e-9, max_iter=100):
+def riemannian_mean(matrices, tol=1e-7, max_iter=500):
     """
     Compute the affine-invariant Riemannian mean of SPD matrices.
 
