@@ -5,7 +5,8 @@ from rpa.core.spd_matrices import (
     matrix_log,
     is_spd,
     matrix_exp,
-    matrix_sqrt
+    matrix_sqrt,
+    nearest_spd,
 )
 
 def  riemannian_distance(A, B):
@@ -76,36 +77,32 @@ def exp_map(P, V):
 
     
 
-def riemannian_mean(matrices, tol=1e-7, max_iter=500):
+def riemannian_mean(matrices, tol=1e-6, max_iter=1000):
     """
     Compute the affine-invariant Riemannian mean of SPD matrices.
 
-    Parameters
-    ----------
-    matrices : ndarray
-        Array with shape
-        (n_matrices, n_channels, n_channels)
-    
-    tol : float, default=1e-9
-        Convergence tolerance. The algorithm stops when the average tanget
-        update has Frobenius norm below this value
+    This implementation performs the iterative update in the tangent
+    space at the identity:
 
-    max_iter : int, default = 100
-        Maximum number of iterations
-    
-    Returns 
-    -------
-    ndarray
-        Riemannian mean with shape
-        (n_channels, n_channels)
+        mean_next = mean^(1/2) exp(avg_log) mean^(1/2)
+
+    where
+
+        avg_log = mean_i log(mean^(-1/2) C_i mean^(-1/2))
+
+    This is numerically more stable than accumulating full tangent matrices
+    at the current mean. 
     """
 
     matrices = np.asarray(matrices, dtype=float)
-    
-    n_matrices, n_rows, n_cols = matrices.shape
 
     if matrices.ndim != 3:
-        raise ValueError("matrices must be 3-dimensional")
+        raise ValueError(
+            "matrices must have shape"
+            "(n_matrices, n_channels, n_channels)."
+        )
+    
+    n_matrices, n_rows, n_cols = matrices.shape
     
     if n_matrices == 0:
         raise ValueError("At least one matrix is required.")
@@ -113,43 +110,55 @@ def riemannian_mean(matrices, tol=1e-7, max_iter=500):
     if n_rows != n_cols:
         raise ValueError("Each matrix must be square.")
 
+    repaired_matrices = []
+
     for index, matrix in enumerate(matrices):
+        matrix = nearest_spd(matrix)
         if not is_spd(matrix):
             raise ValueError(
                 f"Matrix at index {index} is not SPD."
             )
 
-    # Use the arithmetic mean as the initial estimate 
-    mean = np.mean(matrices, axis=0)
+        repaired_matrices.append(matrix)
+
+    matrices = np.array(repaired_matrices)
+
+    if n_matrices == 1:
+        return matrices[0]
+
+    mean = nearest_spd(np.mean(matrices, axis=0))
+
+    final_update_norm = None
 
     for _ in range(max_iter):
+        mean_sqrt = matrix_sqrt(mean)
+        mean_inv_sqrt = matrix_inv_sqrt(mean)
 
         tangent_sum = np.zeros_like(mean)
 
-        for matrix in matrices:
-            tangent_sum += log_map(mean, matrix)
+        for matrix in matrices: 
+            normalized = mean_inv_sqrt @ matrix @ mean_inv_sqrt
+            normalized = nearest_spd(normalized)
 
-        tangent_average = tangent_sum / n_matrices
+            tangent_sum += matrix_log(normalized)
 
-        update_norm = np.linalg.norm(
-            tangent_average, 
-            ord="fro"
-        )
+        tangent_average = tangent_sum / n_matrices 
+
+        update_norm = np.linalg.norm(tangent_average, ord='fro')
+        final_update_norm = update_norm
 
         if update_norm < tol:
-            return mean
-        
-        mean = exp_map(mean, tangent_average)
+            return nearest_spd(mean)
 
-        # Remove tiny numerical asymmetry that could have happened due to floating point errors 
-        # in calculating complex matrix calculations
-        mean = 0.5 * (mean + mean.T)
+        mean = mean_sqrt @ matrix_exp(tangent_average) @ mean_sqrt
+        mean = nearest_spd(mean)
 
     raise RuntimeError(
         "Riemannian mean did not converge within"
-        f"{max_iter} iterations."
+        f"{max_iter} iterations. "
+        f"Final update norm: {final_update_norm:.3e}." 
     )
-
+    
     
 
 

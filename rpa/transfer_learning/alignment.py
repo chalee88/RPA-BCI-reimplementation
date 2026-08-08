@@ -14,22 +14,14 @@ from rpa.core.spd_matrices import (
 )
 
 
-def _validate_covariance_batch(covariances, name="covariances"):
+def _validate_covariance_batch(covariances, name="covariances", repair=False):
     """
-    Validate a batch of SPD covariance matrices.
+    Validate a batch of SPD covariance matrices. 
 
-    Parameters
-    ----------
-    covariances : ndarray
-        Expected shape: (n_matrices, n_channels, n_channels)
-
-    name : str
-        Name used in error messages.
-
-    Returns
-    -------
-    ndarray
-        Validated covariance batch as float ndarray.
+    If repair=True, each matrix is first project to a numerically safe
+    SPD matrix. This is useful after Riemannian transformations, where 
+    tiny negative eigenvalues can appear due to floating-point
+    round-off. 
     """
 
     covariances = np.asarray(covariances, dtype=float)
@@ -48,10 +40,19 @@ def _validate_covariance_batch(covariances, name="covariances"):
     if n_rows != n_cols:
         raise ValueError(f"Each matrix in {name} must be square.")
 
+    if repair:
+        covariances = np.array([
+            nearest_spd(covariance)
+            for covariance in covariances
+        ])
+
     for index, covariance in enumerate(covariances):
         if not is_spd(covariance):
+            sym_covariance = 0.5 * (covariance + covariance.T)
+            min_eigenvalue = np.min(np.linagl.eigvalsh(sym_covariance))
             raise ValueError(
                 f"Matrix at index {index} in {name} is not SPD."
+                f"Minimum eigenvalue: {min_eigenvalue:.3e}"
             )
 
     return covariances
@@ -102,14 +103,14 @@ def center_covariances(covariances, mean=None):
     mean_inv_sqrt = matrix_inv_sqrt(mean)
 
     centered_covariances = np.array([
-        mean_inv_sqrt @ covariance @ mean_inv_sqrt
+        nearest_spd(mean_inv_sqrt @ covariance @ mean_inv_sqrt)
         for covariance in covariances
     ])
 
-    centered_covariances = 0.5 * (
-        centered_covariances
-        + np.transpose(centered_covariances, axes=(0, 2, 1))
-    )
+    # centered_covariances = 0.5 * (
+    #     centered_covariances
+    #     + np.transpose(centered_covariances, axes=(0, 2, 1))
+    # )
 
     return centered_covariances, mean
 
@@ -141,6 +142,7 @@ def recolor_covariances(centered_covariances, target_mean):
     centered_covariances = _validate_covariance_batch(
         centered_covariances,
         name="centered_covariances",
+        repair=True,
     )
 
     target_mean = np.asarray(target_mean, dtype=float)
@@ -295,10 +297,11 @@ def stretch_covariances(centered_covariances, scale):
     centered_covariances = _validate_covariance_batch(
         centered_covariances,
         name="centered_covariances",
+        repair=True,
     )
 
     stretched = np.array([
-        matrix_power(covariance, scale)
+        nearest_spd(matrix_power(covariance, scale))
         for covariance in centered_covariances
     ])
 
@@ -376,6 +379,7 @@ def rotate_covariances(covariances, U):
     covariances = _validate_covariance_batch(
         covariances,
         name="covariances",
+        repair=True,
     )
 
     U = np.asarray(U, dtype=float)
